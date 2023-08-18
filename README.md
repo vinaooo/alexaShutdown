@@ -1,2 +1,2 @@
 # alexaShutdown
-A simple app to shutdown PC receiving an Alexa command from an skill
+A simple app in python to shutdown PC receiving an Alexa command from an skill
