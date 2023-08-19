@@ -17,31 +17,32 @@ class CentralizedTextApp(Gtk.Application):
 
         self.counter = 120
         self.timer_id = None
+        self.label = None
 
     def do_activate(self):
+        self.timer_id = GLib.timeout_add(1000, self.update_counter)     # Start the timer
+
         window = Gtk.ApplicationWindow(application=self)
         window.set_title("Alexa Shutdown pc")
-        window.set_default_size(250, 150)                               # Set the size of the window
+        window.set_default_size(350, 150)                               # Set the size of the window
         window.set_resizable(False)                                     # Fixes the window from being resized
 
         def on_cancel_clicked(button):
             GLib.source_remove(self.timer_id)
-            label.set_label("Shutdown aborted")
+            self.label.set_label("Shutdown aborted")
 
             subprocess.run(["shutdown", "-c"])                          # Cancel shutdown
             button.set_sensitive(False)  
 
-            return True
-
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         window.set_child(box)                                           
 
-        label = Gtk.Label(label="Shuting pc down in " + str(self.counter))
-        label.set_margin_top(50)
-        label.set_margin_bottom(50)
-        label.set_halign(Gtk.Align.CENTER)
-        label.set_valign(Gtk.Align.CENTER)
-        box.append(label)
+        self.label = Gtk.Label(label=" ")
+        self.label.set_margin_top(50)
+        self.label.set_margin_bottom(50)
+        self.label.set_halign(Gtk.Align.CENTER)
+        self.label.set_valign(Gtk.Align.CENTER)
+        box.append(self.label)
 
         button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         button_box.set_halign(Gtk.Align.CENTER)
@@ -58,11 +59,14 @@ class CentralizedTextApp(Gtk.Application):
         button_box.append(btn_Shutdown)
 
         def update_counter():
+            minutes = self.counter // 60
+            seconds = self.counter % 60
+            self.label.set_label("Shutting pc down in " + str(minutes) + " minutes and " + str(seconds) + " seconds")
             self.counter -= 1
-            label.set_label("Shuting pc down in " + str(self.counter))
             if self.counter == 0:
                 GLib.source_remove(self.timer_id)
             return True
+
 
         def on_shutdown_clicked(button):
             os.system('systemctl poweroff')                             # Force shutdown instantly
@@ -70,11 +74,18 @@ class CentralizedTextApp(Gtk.Application):
         btn_cancel.connect("clicked", on_cancel_clicked)
         btn_Shutdown.connect("clicked", on_shutdown_clicked)
 
-        self.timer_id = GLib.timeout_add(1000, update_counter)
-
         window.connect("destroy", on_destroy)                           # Connect the window destroy to the on_destroy
 
         window.set_visible(True)
+
+    def update_counter(self):
+        minutes = self.counter // 60
+        seconds = self.counter % 60
+        self.label.set_label("Shutting pc down in " + str(minutes) + " minutes and " + str(seconds) + " seconds")
+        self.counter -= 1
+        if self.counter == 0:
+            GLib.source_remove(self.timer_id)
+        return True
 
 app = CentralizedTextApp()
 app.run(None)
